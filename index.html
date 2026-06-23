@@ -1,4 +1,4 @@
-<!-- FF-VERSION:20260623-192501 -->
+<!-- FF-VERSION:20260623-204601 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -367,7 +367,8 @@ input,select,textarea{font-size:16px!important;}
     </div>
     <div class="top-right">
       <div class="sdot" id="sdot" title="Sync status"></div>
-      <span class="slabel" id="slabel" style="display:none;"></span>
+      <span class="slabel" id="slabel" style="font-size:10px;color:var(--text3);"></span>
+      <span id="ver-tag" style="font-size:9px;color:var(--text3);font-family:'IBM Plex Mono',monospace;margin-left:4px;" title="App version"></span>
       <button class="btn sm" onclick="syncNow()" title="Sync" style="padding:8px 10px;">&#10227;</button>
       <button class="btn sm primary" id="new-job-btn" onclick="openNewJob()" style="padding:8px 14px;">+ Job</button>
       <button class="btn sm" onclick="doLogout()" style="padding:8px 10px;">&#8627;</button>
@@ -5668,10 +5669,10 @@ function removeWorkSegment(idx){
   }
 }
 
-console.log("FF version: 20260623-192501");
+console.log("FF version: 20260623-204601");setTimeout(()=>{const vt=document.getElementById("ver-tag");if(vt)vt.textContent="v204601";},500);
 // ── AUTO-UPDATER (no more delete/re-add) ──────────────────────────
 // This running build's version:
-const FF_RUNNING_VERSION = "20260623-192501";
+const FF_RUNNING_VERSION = "20260623-204601";
 const FF_APP_URL = "https://8dmart13-sketch.github.io/fortress-fencing/index.html";
 
 async function checkForUpdate(){
