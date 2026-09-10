@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Apply – Fortress Fencing</title>
+<meta name="theme-color" content="#1C2630">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  /* ============ EDIT THESE ============ */
+  /* (Business info lives in the CONFIG block in the script at the bottom) */
+  :root{
+    --ink:#1C2630;      /* header, text */
+    --steel:#55636D;    /* secondary text */
+    --cedar:#9A6B45;    /* selected states, main button */
+    --concrete:#ECEEEA; /* page background */
+    --line:#C9CDC8;
+    --field:#FFFFFF;
+    --error:#B3261E;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--concrete);color:var(--ink);
+    font-family:Barlow,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.45}
+  h1,h2{font-family:"Barlow Semi Condensed",Barlow,system-ui,sans-serif;margin:0;line-height:1.1}
+
+  header{background:var(--ink);color:#fff;padding:28px 20px 44px;position:relative}
+  header::after{ /* picket fence edge */
+    content:"";position:absolute;left:0;right:0;bottom:-1px;height:22px;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='22'%3E%3Cpath d='M4 22V8l9-8 9 8v14z' fill='%23ECEEEA'/%3E%3C/svg%3E") repeat-x left bottom;
+  }
+  .wrap{max-width:560px;margin:0 auto}
+  header h1{font-size:34px;letter-spacing:.5px}
+  header p{margin:6px 0 0;color:#C7CFD5;font-size:15px}
+
+  main{padding:8px 16px 40px}
+  section{padding:22px 0 6px;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:0}
+  h2{font-size:22px;margin-bottom:4px}
+  .hint{color:var(--steel);font-size:14px;margin:0 0 12px}
+
+  label.f{display:block;margin:12px 0 0}
+  label.f span{display:block;font-weight:600;font-size:15px;margin-bottom:4px}
+  label.f span em{font-style:normal;font-weight:400;color:var(--steel)}
+  input[type=text],input[type=tel],input[type=email],input[type=date],textarea,select{
+    width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--field);
+    border:1.5px solid var(--line);border-radius:6px;padding:11px 12px;min-height:46px;appearance:none}
+  textarea{min-height:92px;resize:vertical}
+  input:focus,textarea:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(28,38,48,.15)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+  .row3{display:grid;grid-template-columns:2fr 1fr 1.3fr;gap:0 10px}
+
+  /* yes / no questions */
+  .q{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px dashed var(--line)}
+  .q:first-of-type{border-top:0}
+  .q.follow{padding-left:14px;border-left:4px solid var(--cedar)}
+  .q[hidden]{display:none}
+  .q > span{font-weight:500;flex:1}
+  .yn{display:flex;border:1.5px solid var(--line);border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--field)}
+  .yn label{position:relative}
+  .yn input{position:absolute;opacity:0;inset:0;margin:0}
+  .yn b{display:block;padding:9px 16px;font-weight:600;min-width:56px;text-align:center}
+  .yn label + label b{border-left:1.5px solid var(--line)}
+  .yn input:checked + b{background:var(--ink);color:#fff}
+  .yn input:focus-visible + b{outline:3px solid var(--cedar);outline-offset:-3px}
+
+  /* chips */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chips label{position:relative}
+  .chips input{position:absolute;opacity:0;inset:0;margin:0}
+  .chips b{display:inline-block;font-weight:500;padding:8px 13px;border:1.5px solid var(--line);border-radius:999px;background:var(--field)}
+  .chips input:checked + b{background:var(--cedar);border-color:var(--cedar);color:#fff}
+  .chips input:focus-visible + b{outline:3px solid var(--ink);outline-offset:2px}
+  .sub{font-weight:600;font-size:15px;margin:16px 0 0}
+
+  .job{margin-top:14px;padding:4px 14px 14px;border-left:4px solid var(--line);background:rgba(255,255,255,.45)}
+  .job h3{font-size:16px;margin:10px 0 0}
+  .job[hidden]{display:none}
+  .link{background:none;border:0;color:var(--cedar);font:inherit;font-weight:600;padding:12px 0;cursor:pointer;text-decoration:none;display:inline-block}
+
+  .sig{position:relative;margin-top:8px;background:var(--field);border:1.5px solid var(--line);border-radius:6px}
+  .sig canvas{display:block;width:100%;height:150px;touch-action:none;cursor:crosshair}
+  .sig .base{position:absolute;left:14px;right:14px;bottom:34px;border-bottom:1px solid var(--line);pointer-events:none}
+  .sig .x{position:absolute;left:14px;bottom:38px;color:var(--steel);pointer-events:none}
+  .sig .clear{position:absolute;right:8px;top:6px;background:none;border:0;color:var(--steel);font:inherit;font-size:14px;padding:6px;cursor:pointer}
+  .certify{display:flex;gap:10px;align-items:flex-start;margin:16px 0 0;font-size:15px}
+  .certify input{width:22px;height:22px;margin:2px 0 0;flex-shrink:0;accent-color:var(--ink)}
+
+  .err{color:var(--error);font-size:14px;font-weight:600;margin:6px 0 0;min-height:0}
+  .send{display:block;width:100%;margin-top:22px;padding:16px;border:0;border-radius:8px;
+    background:var(--cedar);color:#fff;font:inherit;font-size:18px;font-weight:600;cursor:pointer}
+  .send:active{transform:translateY(1px)}
+  .send:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+  .fine{color:var(--steel);font-size:13px;text-align:center;margin:10px 0 0}
+
+  #done{padding:30px 16px 60px}
+  #done h2{font-size:28px}
+  .btn{display:block;text-align:center;text-decoration:none;margin-top:12px;padding:15px;border-radius:8px;font-weight:600;font-size:17px;border:1.5px solid var(--ink);color:var(--ink);background:var(--field);cursor:pointer;width:100%;font-family:inherit}
+  .btn.primary{background:var(--ink);color:#fff}
+  .number{font-family:"Barlow Semi Condensed",sans-serif;font-size:30px;font-weight:700;margin:4px 0 0}
+
+  @media (max-width:380px){ .row3{grid-template-columns:1fr 1fr} .row3 > :first-child{grid-column:1 / -1} }
+  @media (prefers-reduced-motion:reduce){ *{scroll-behavior:auto!important} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1 id="bizName">Fortress Fencing</h1>
+    <p id="subTitle">Job application. Takes about 5 minutes.</p>
+  </div>
+</header>
+
+<form id="app" class="wrap" novalidate autocomplete="on">
+<main>
+
+  <section>
+    <h2>About you</h2>
+    <div class="row">
+      <label class="f"><span>First name</span><input type="text" name="firstName" autocomplete="given-name" required></label>
+      <label class="f"><span>Last name</span><input type="text" name="lastName" autocomplete="family-name" required></label>
+    </div>
+    <label class="f"><span>Phone</span><input type="tel" name="phone" autocomplete="tel" inputmode="tel" required></label>
+    <label class="f"><span>Email <em>(optional)</em></span><input type="email" name="email" autocomplete="email"></label>
+    <label class="f"><span>Street address</span><input type="text" name="street" autocomplete="address-line1"></label>
+    <div class="row3">
+      <label class="f"><span>City</span><input type="text" name="city" autocomplete="address-level2"></label>
+      <label class="f"><span>State</span><input type="text" name="state" autocomplete="address-level1" value="TX"></label>
+      <label class="f"><span>ZIP</span><input type="text" name="zip" autocomplete="postal-code" inputmode="numeric"></label>
+    </div>
+
+    <div style="margin-top:14px">
+      <div class="q"><span>Are you 18 or older?</span><div class="yn"><label><input type="radio" name="over18" value="Yes" required><b>Yes</b></label><label><input type="radio" name="over18" value="No"><b>No</b></label></div></div>
+      <div class="q"><span>Legally able to work in the U.S.?</span><div class="yn"><label><input type="radio" name="workAuth" value="Yes" required><b>Yes</b></label><label><input type="radio" name="workAuth" value="No"><b>No</b></label></div></div>
+      <div class="q"><span>Valid driver's license?</span><div class="yn"><label><input type="radio" name="license" value="Yes" required><b>Yes</b></label><label><input type="radio" name="license" value="No"><b>No</b></label></div></div>
+      <div class="q"><span>Do you have your own transportation?</span><div class="yn"><label><input type="radio" name="transport" value="Yes" required><b>Yes</b></label><label><input type="radio" name="transport" value="No"><b>No</b></label></div></div>
+      <div class="q follow" id="qPickup" hidden><span>Is it a pickup that can pull a trailer?</span><div class="yn"><label><input type="radio" name="pickup" value="Yes" required disabled><b>Yes</b></label><label><input type="radio" name="pickup" value="No" disabled><b>No</b></label></div></div>
+      <div class="q follow" id="qUseTruck" hidden><span>Would you be willing to use it for work sometimes?</span><div class="yn"><label><input type="radio" name="useTruck" value="Yes" required disabled><b>Yes</b></label><label><input type="radio" name="useTruck" value="No" disabled><b>No</b></label></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The job</h2>
+    <p class="sub">What position are you applying for?</p>
+    <div class="chips">
+      <label><input type="checkbox" name="position" value="Fence Installer / Laborer"><b>Fence installer / laborer</b></label>
+      <label><input type="checkbox" name="position" value="Crew Leader"><b>Crew leader</b></label>
+      <label><input type="checkbox" name="position" value="Welder"><b>Welder</b></label>
+      <label><input type="checkbox" name="position" value="Office / Admin"><b>Office / admin</b></label>
+      <label><input type="checkbox" name="position" value="Sales / Estimator"><b>Sales / estimator</b></label>
+    </div>
+    <label class="f"><span>Something else? <em>(optional)</em></span><input type="text" name="positionOther"></label>
+
+    <p class="sub">Type of work</p>
+    <div class="chips">
+      <label><input type="checkbox" name="workType" value="Full-time"><b>Full-time</b></label>
+      <label><input type="checkbox" name="workType" value="Part-time"><b>Part-time</b></label>
+      <label><input type="checkbox" name="workType" value="Contract / 1099"><b>Contract / 1099</b></label>
+    </div>
+    <div class="row">
+      <label class="f"><span>Can start</span><input type="date" name="startDate"></label>
+      <label class="f"><span>Desired pay</span><input type="text" name="pay" placeholder="e.g. $18/hr"></label>
+    </div>
+    <div class="q" style="margin-top:10px"><span>Can you do outdoor physical work (heat, lifting 50+ lbs), with or without reasonable accommodation?</span><div class="yn"><label><input type="radio" name="physical" value="Yes" required><b>Yes</b></label><label><input type="radio" name="physical" value="No"><b>No</b></label></div></div>
+  </section>
+
+  <section>
+    <h2>Experience</h2>
+    <label class="f"><span>Years of fence or construction experience</span><input type="text" name="years" inputmode="decimal" placeholder="0 is fine"></label>
+    <p class="sub">Fence types you've installed</p>
+    <div class="chips">
+      <label><input type="checkbox" name="fenceTypes" value="Wood / Cedar"><b>Wood / cedar</b></label>
+      <label><input type="checkbox" name="fenceTypes" value="Chain Link"><b>Chain link</b></label>
+      <label><input type="checkbox" name="fenceTypes" value="Pipe / Ranch"><b>Pipe / ranch</b></label>
+      <label><input type="checkbox" name="fenceTypes" value="Vinyl"><b>Vinyl</b></label>
+      <label><input type="checkbox" name="fenceTypes" value="Wrought Iron / Ornamental"><b>Wrought iron / ornamental</b></label>
+      <label><input type="checkbox" name="fenceTypes" value="Gates / Gate Openers"><b>Gates / gate openers</b></label>
+    </div>
+    <p class="sub">Equipment you can run</p>
+    <div class="chips">
+      <label><input type="checkbox" name="equipment" value="Skid Steer"><b>Skid steer</b></label>
+      <label><input type="checkbox" name="equipment" value="Auger / Post Hole Digger"><b>Auger / post hole digger</b></label>
+      <label><input type="checkbox" name="equipment" value="Post Driver"><b>Post driver</b></label>
+      <label><input type="checkbox" name="equipment" value="Welder"><b>Welder</b></label>
+      <label><input type="checkbox" name="equipment" value="Truck & Trailer Towing"><b>Truck &amp; trailer towing</b></label>
+      <label><input type="checkbox" name="equipment" value="Concrete Mixer"><b>Concrete mixer</b></label>
+    </div>
+    <label class="f"><span>Anything else we should know? <em>(optional)</em></span><textarea name="notes" placeholder="Other skills, certifications, tools you own…"></textarea></label>
+  </section>
+
+  <section>
+    <h2>Work history</h2>
+    <p class="hint">Most recent job first. Leave blank if this is your first job.</p>
+    <div id="jobs"></div>
+    <button type="button" class="link" id="addJob">+ Add another job</button>
+  </section>
+
+  <section>
+    <h2>References</h2>
+    <p class="hint">Two people who know your work. Not family.</p>
+    <div id="refs"></div>
+  </section>
+
+  <section>
+    <h2>Sign and send</h2>
+    <label class="certify">
+      <input type="checkbox" name="certify" id="certify" required>
+      <span>I certify that everything on this application is true and complete. I understand false or missing information may disqualify me or lead to dismissal if hired, and that employment is at-will and may be ended by either party at any time.</span>
+    </label>
+    <p class="sub">Sign with your finger</p>
+    <div class="sig">
+      <canvas id="sigPad" aria-label="Signature pad"></canvas>
+      <div class="base"></div><div class="x">✕</div>
+      <button type="button" class="clear" id="sigClear">Clear</button>
+    </div>
+    <p class="err" id="formErr" role="alert"></p>
+    <button type="submit" class="send">Create PDF and send</button>
+    <p class="fine">Your phone will open its share menu so you can text or email the PDF.</p>
+  </section>
+
+</main>
+</form>
+
+<div id="done" class="wrap" hidden>
+  <h2>Your application is ready</h2>
+  <p id="doneMsg">If it didn't send, use the buttons below.</p>
+  <div id="textBlock" hidden>
+    <p class="hint" style="margin:14px 0 0">Send the PDF to:</p>
+    <p class="number" id="textNumber"></p>
+  </div>
+  <button class="btn primary" id="shareAgain" type="button">Share PDF</button>
+  <a class="btn" id="dlLink" download>Download PDF</a>
+  <a class="btn" id="smsLink" hidden>Open text message</a>
+  <a class="btn" id="mailLink" hidden>Open email</a>
+</div>
+
+<script>
+/* ==================== EDIT THIS ==================== */
+const CONFIG = {
+  businessName: "Fortress Fencing",
+  legalName:    "Fortress Fencing Partners LLC",
+  cityState:    "Abilene, TX",
+  textTo:       "325-864-4623",   // shown after they finish
+  emailTo:      ""    // e.g. "jobs@fortressfencing.com"
+};
+/* =================================================== */
+
+const $ = s => document.querySelector(s);
+document.title = "Apply – " + CONFIG.businessName;
+$("#bizName").textContent = CONFIG.businessName;
+
+/* ---------- Work history & references blocks ---------- */
+const jobHTML = n => `
+  <div class="job" data-job="${n}" ${n>1?'hidden':''}>
+    <h3>Job ${n}</h3>
+    <label class="f"><span>Employer</span><input type="text" name="job${n}_employer" autocomplete="off"></label>
+    <div class="row">
+      <label class="f"><span>Your job title</span><input type="text" name="job${n}_title" autocomplete="off"></label>
+      <label class="f"><span>Their phone</span><input type="tel" name="job${n}_phone" inputmode="tel" autocomplete="off"></label>
+    </div>
+    <div class="row">
+      <label class="f"><span>Started</span><input type="text" name="job${n}_start" placeholder="Month / year" autocomplete="off"></label>
+      <label class="f"><span>Ended</span><input type="text" name="job${n}_end" placeholder="or “current”" autocomplete="off"></label>
+    </div>
+    <label class="f"><span>Supervisor</span><input type="text" name="job${n}_supervisor" autocomplete="off"></label>
+    <label class="f"><span>Reason for leaving</span><input type="text" name="job${n}_reason" autocomplete="off"></label>
+  </div>`;
+$("#jobs").innerHTML = [1,2,3].map(jobHTML).join("");
+$("#addJob").onclick = () => {
+  const next = document.querySelector(".job[hidden]");
+  if (next) { next.hidden = false; next.querySelector("input").focus(); }
+  if (!document.querySelector(".job[hidden]")) $("#addJob").hidden = true;
+};
+
+$("#refs").innerHTML = [1,2].map(n => `
+  <div class="job">
+    <h3>Reference ${n}</h3>
+    <label class="f"><span>Name</span><input type="text" name="ref${n}_name" autocomplete="off"></label>
+    <div class="row">
+      <label class="f"><span>Relationship</span><input type="text" name="ref${n}_rel" autocomplete="off"></label>
+      <label class="f"><span>Phone</span><input type="tel" name="ref${n}_phone" inputmode="tel" autocomplete="off"></label>
+    </div>
+  </div>`).join("");
+
+/* ---------- Transportation follow-ups ---------- */
+function showQ(id, on){
+  const q = document.getElementById(id);
+  q.hidden = !on;
+  q.querySelectorAll("input").forEach(i => { i.disabled = !on; if (!on) i.checked = false; });
+}
+function updateTransport(){
+  const own = radio("transport") === "Yes";
+  showQ("qPickup", own);
+  showQ("qUseTruck", own && radio("pickup") === "Yes");
+}
+document.querySelectorAll('input[name="transport"], input[name="pickup"]').forEach(i => i.addEventListener("change", updateTransport));
+
+/* ---------- Signature pad ---------- */
+const pad = $("#sigPad"), ctx = pad.getContext("2d");
+let drawing = false, hasSig = false, last = null;
+function sizePad(){
+  const r = pad.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  if (pad.width === Math.round(r.width * dpr) && pad.height === Math.round(r.height * dpr)) return;
+  const saved = hasSig ? pad.toDataURL() : null;
+  pad.width = r.width * dpr; pad.height = r.height * dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.lineWidth = 2.4; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#1C2630";
+  if (saved){ const img = new Image(); img.onload = () => ctx.drawImage(img,0,0,r.width,r.height); img.src = saved; }
+}
+const pt = e => { const r = pad.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+pad.addEventListener("pointerdown", e => { drawing = true; $("#formErr").textContent = ""; last = pt(e); pad.setPointerCapture(e.pointerId); e.preventDefault(); });
+pad.addEventListener("pointermove", e => {
+  if (!drawing) return;
+  const p = pt(e); ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke();
+  last = p; hasSig = true;
+});
+["pointerup","pointercancel","pointerleave"].forEach(ev => pad.addEventListener(ev, () => drawing = false));
+$("#sigClear").onclick = () => { ctx.clearRect(0,0,pad.width,pad.height); hasSig = false; };
+window.addEventListener("resize", sizePad);
+sizePad();
+
+/* ---------- Helpers ---------- */
+const form = $("#app");
+const val = n => (form.elements[n]?.value || "").trim();
+const radio = n => (form.querySelector(`input[name="${n}"]:checked`)?.value || "");
+const multi = n => [...form.querySelectorAll(`input[name="${n}"]:checked`)].map(i => i.value).join(", ");
+const fmtDate = s => { if(!s) return ""; const [y,m,d] = s.split("-"); return `${m}/${d}/${y}`; };
+
+/* ---------- PDF ---------- */
+function buildPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:"pt", format:"letter" });
+  const M = 48, PW = 612, PH = 792, CW = PW - 2*M;
+  let y = M;
+  const ensure = h => { if (y + h > PH - M) { doc.addPage(); y = M; } };
+
+  doc.setFont("helvetica","bold").setFontSize(20).setTextColor(28,38,48);
+  doc.text(CONFIG.businessName.toUpperCase(), PW/2, y + 6, { align:"center" });
+  doc.setFont("helvetica","normal").setFontSize(9.5).setTextColor(90);
+  doc.text(`${CONFIG.legalName}  |  ${CONFIG.cityState}`, PW/2, y + 22, { align:"center" });
+  doc.setFont("helvetica","bold").setFontSize(13).setTextColor(28,38,48);
+  doc.text("EMPLOYMENT APPLICATION", PW/2, y + 42, { align:"center" });
+  doc.setDrawColor(28,38,48).setLineWidth(1.5).line(M, y + 50, PW - M, y + 50);
+  y += 64;
+
+  const section = t => {
+    ensure(46); y += 6;
+    doc.setFillColor(28,38,48).rect(M, y, CW, 18, "F");
+    doc.setFont("helvetica","bold").setFontSize(9.5).setTextColor(255);
+    doc.text(t.toUpperCase(), M + 7, y + 12.5);
+    y += 26;
+  };
+  const row = fields => {
+    const colW = CW / fields.length;
+    doc.setFontSize(10);
+    const wrapped = fields.map(([,v]) => doc.splitTextToSize(v || "—", colW - 12));
+    const h = 16 + Math.max(...wrapped.map(w => w.length)) * 12 + 6;
+    ensure(h);
+    fields.forEach(([label], i) => {
+      const x = M + i * colW;
+      doc.setFont("helvetica","bold").setFontSize(7).setTextColor(110);
+      doc.text(label.toUpperCase(), x, y + 8);
+      doc.setFont("helvetica","normal").setFontSize(10).setTextColor(20);
+      doc.text(wrapped[i], x, y + 21);
+      doc.setDrawColor(205).setLineWidth(.5).line(x, y + h - 3, x + colW - 12, y + h - 3);
+    });
+    y += h + 4;
+  };
+
+  section("Applicant information");
+  row([["First name", val("firstName")], ["Last name", val("lastName")], ["Date submitted", new Date().toLocaleDateString("en-US")]]);
+  row([["Street address", val("street")], ["City", val("city")], ["State", val("state")], ["ZIP", val("zip")]]);
+  row([["Phone", val("phone")], ["Email", val("email")]]);
+  row([["18 or older", radio("over18")], ["Legally able to work in U.S.", radio("workAuth")], ["Valid driver's license", radio("license")]]);
+  const own = radio("transport"), pk = radio("pickup");
+  row([["Own transportation", own],
+       ["Pickup that can pull a trailer", own === "Yes" ? pk : "N/A"],
+       ["Willing to use it for work sometimes", pk === "Yes" ? radio("useTruck") : "N/A"]]);
+
+  section("Position");
+  row([["Position(s)", [multi("position"), val("positionOther")].filter(Boolean).join(", ")]]);
+  row([["Type of work", multi("workType")], ["Can start", fmtDate(val("startDate"))], ["Desired pay", val("pay")]]);
+  row([["Can do outdoor physical work (heat, lifting 50+ lbs), with or without reasonable accommodation", radio("physical")]]);
+
+  section("Experience & skills");
+  row([["Years of fence / construction experience", val("years")]]);
+  row([["Fence types installed", multi("fenceTypes")]]);
+  row([["Equipment", multi("equipment")]]);
+  row([["Other skills / notes", val("notes")]]);
+
+  section("Work history");
+  let anyJob = false;
+  for (let n = 1; n <= 3; n++){
+    if (!val(`job${n}_employer`)) continue;
+    anyJob = true;
+    row([[`Employer ${n}`, val(`job${n}_employer`)], ["Job title", val(`job${n}_title`)], ["Phone", val(`job${n}_phone`)]]);
+    row([["Started", val(`job${n}_start`)], ["Ended", val(`job${n}_end`)], ["Supervisor", val(`job${n}_supervisor`)], ["Reason for leaving", val(`job${n}_reason`)]]);
+    y += 4;
+  }
+  if (!anyJob) row([["Work history", "None listed"]]);
+
+  section("References");
+  for (let n = 1; n <= 2; n++){
+    row([["Name", val(`ref${n}_name`)], ["Relationship", val(`ref${n}_rel`)], ["Phone", val(`ref${n}_phone`)]]);
+  }
+
+  section("Signature");
+  const cert = "I certify that everything on this application is true and complete. I understand false or missing information may disqualify me or lead to dismissal if hired, and that employment is at-will and may be ended by either party at any time.";
+  doc.setFont("helvetica","normal").setFontSize(9).setTextColor(40);
+  const certLines = doc.splitTextToSize(cert, CW);
+  ensure(certLines.length * 11 + 90);
+  doc.text(certLines, M, y + 4);
+  y += certLines.length * 11 + 6;
+  doc.addImage(pad.toDataURL("image/png"), "PNG", M, y, 200, 200 * pad.height / pad.width);
+  const sigBottom = y + 200 * pad.height / pad.width;
+  doc.setDrawColor(120).setLineWidth(.6).line(M, sigBottom + 2, M + 280, sigBottom + 2).line(M + 320, sigBottom + 2, PW - M, sigBottom + 2);
+  doc.setFont("helvetica","bold").setFontSize(7).setTextColor(110);
+  doc.text("APPLICANT SIGNATURE  (agreed to statement above: YES)", M, sigBottom + 10);
+  doc.text("DATE", M + 320, sigBottom + 10);
+  doc.setFont("helvetica","normal").setFontSize(10).setTextColor(20);
+  doc.text(new Date().toLocaleString("en-US"), M + 320, sigBottom - 6);
+  y = sigBottom + 24;
+
+  ensure(60);
+  doc.setDrawColor(150).setLineDashPattern([3,3],0).line(M, y, PW - M, y).setLineDashPattern([],0);
+  y += 14;
+  doc.setFont("helvetica","bold").setFontSize(8).setTextColor(110).text("OFFICE USE ONLY", M, y);
+  y += 8;
+  row([["Interviewed by", " "], ["Interview date", " "], ["Hired (Y/N)", " "], ["Start date", " "], ["Pay rate", " "]]);
+
+  return doc;
+}
+
+/* ---------- Submit ---------- */
+let pdfFile = null, pdfURL = null;
+
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  const err = $("#formErr"); err.textContent = "";
+
+  if (!form.checkValidity()){
+    const bad = form.querySelector(":invalid");
+    const q = bad.closest(".q") || bad.closest("label") || bad;
+    q.scrollIntoView({ behavior:"smooth", block:"center" });
+    err.textContent = bad.type === "radio" ? "Answer every Yes / No question." :
+                      bad.name === "certify" ? "Check the box to certify your application." :
+                      "Fill in your name and phone number.";
+    if (bad.type !== "radio" && bad.type !== "checkbox") setTimeout(() => bad.focus(), 300);
+    return;
+  }
+  if (!hasSig){ err.textContent = "Sign in the box above before sending."; pad.scrollIntoView({ behavior:"smooth", block:"center" }); return; }
+  if (!window.jspdf){ err.textContent = "The PDF tool didn't load. Check your internet connection and reload the page."; return; }
+
+  const doc = buildPDF();
+  const safe = s => s.replace(/[^a-z0-9]+/gi, "_");
+  const name = `Application_${safe(val("lastName"))}_${safe(val("firstName"))}_${new Date().toISOString().slice(0,10)}.pdf`;
+  const blob = doc.output("blob");
+  pdfFile = new File([blob], name, { type:"application/pdf" });
+  if (pdfURL) URL.revokeObjectURL(pdfURL);
+  pdfURL = URL.createObjectURL(blob);
+
+  showDone();
+  await share();
+});
+
+async function share(){
+  const msg = `Job application – ${val("firstName")} ${val("lastName")}`;
+  if (navigator.canShare && navigator.canShare({ files:[pdfFile] })){
+    try { await navigator.share({ files:[pdfFile], title: msg, text: msg }); $("#doneMsg").textContent = "Thanks! If you picked someone to send it to, you're all set."; }
+    catch (e) { if (e.name !== "AbortError") download(); }
+  } else {
+    download();
+    $("#doneMsg").textContent = "The PDF downloaded to your device. Attach it to a text or email to send it.";
+  }
+}
+function download(){ const a = $("#dlLink"); a.click(); }
+
+function showDone(){
+  form.hidden = true; $("#done").hidden = false; window.scrollTo(0,0);
+  const dl = $("#dlLink"); dl.href = pdfURL; dl.download = pdfFile.name;
+  if (CONFIG.textTo){
+    $("#textBlock").hidden = false; $("#textNumber").textContent = CONFIG.textTo;
+    const sms = $("#smsLink"); sms.hidden = false; sms.href = "sms:" + CONFIG.textTo.replace(/[^\d+]/g,"");
+  }
+  if (CONFIG.emailTo){
+    const m = $("#mailLink"); m.hidden = false;
+    m.href = `mailto:${CONFIG.emailTo}?subject=${encodeURIComponent("Job application – " + val("firstName") + " " + val("lastName"))}`;
+    if (!CONFIG.textTo){ $("#textBlock").hidden = false; $("#textNumber").textContent = CONFIG.emailTo; }
+  }
+}
+$("#shareAgain").onclick = share;
+
+/* ---------- Prefill from a link sent by staff (?name=Jake&pos=Crew%20Leader) ---------- */
+(() => {
+  const qs = new URLSearchParams(location.search);
+  if (qs.get("name")) form.elements.firstName.value = qs.get("name");
+  const pos = qs.get("pos");
+  if (pos) form.querySelectorAll('input[name="position"]').forEach(i => { if (i.value === pos) i.checked = true; });
+})();
+
+</script>
+</body>
+</html>
